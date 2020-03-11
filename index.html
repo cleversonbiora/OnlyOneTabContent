@@ -1,0 +1,83 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Limited Content One Tab</title>
+</head>
+<body>
+  <div>
+      <div>
+        Generic Content
+      </div>
+      <div id="onlyOne" style="display: none;">
+        Exclusive Content
+      </div>
+  </div>
+<script>
+  //names of session and 
+  const UUID_KEY = "site_tabid";
+  const TAB_KEY = "site_tabinitial";
+  const TIMEOUT_KEY = "site_tabtimeout";
+  const INTERVAL_TIME = 1000;
+  var uuidInital;
+  var uuid;
+  
+  function updateLocalIds(){
+    uuid = sessionStorage.getItem(UUID_KEY);
+    uuidInital = localStorage.getItem(TAB_KEY);
+  }
+
+  function verifyUuid(){
+    updateLocalIds();
+    if(uuidInital === uuid){
+      localStorage.setItem(TIMEOUT_KEY, new Date());
+    }else{
+      let lastUpdate = localStorage.getItem(TIMEOUT_KEY);
+      let now = new Date();
+      now.setSeconds(now.getSeconds() - (INTERVAL_TIME * 5));
+      if(lastUpdate < now)
+        localStorage.removeItem(TAB_KEY);
+    }
+
+    if(!uuid){
+      uuid = uuidv4();
+      sessionStorage.setItem(UUID_KEY, uuid);
+    }
+
+    if(!uuidInital){
+      uuidInital = uuid;
+      localStorage.setItem(TAB_KEY, uuidInital);
+    }
+    
+    let onlyOne = document.getElementById("onlyOne");
+    if(uuidInital === uuid){
+      onlyOne.style.display = "block";
+    }else{
+      onlyOne.style.display = "none";
+    }
+  }
+
+
+  function uuidv4() {
+    console.log("generating");
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+      var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+      return v.toString(16);
+    });
+  }
+
+  window.onbeforeunload = closingCode;
+  function closingCode(){
+    updateLocalIds()
+    console.log("closing");
+    if(uuidInital === uuid)
+      localStorage.removeItem(TAB_KEY);
+    return null;
+  }
+
+  verifyUuid();
+  setInterval(verifyUuid, INTERVAL_TIME);
+</script>
+</body>
+</html>
